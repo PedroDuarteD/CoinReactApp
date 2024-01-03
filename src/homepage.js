@@ -6,6 +6,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useNavigation } from '@react-navigation/native';
 import storage from './storage';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function HomePage(){
   const [crypt, setCrypt] = useState([]);
@@ -15,20 +16,57 @@ export default function HomePage(){
 
     const navigation = useNavigation();
   useEffect(()=>{
-console.log("use effect home")
     fetch("https://pro-api.coinmarketcap.com/v1/cryptocurrency/listings/latest?start=1&limit=5&convert=USD&CMC_PRO_API_KEY=abd21725-e7b1-4b5a-a84c-4c4067692ebb")
     .then((res)=>{
       if(!res.ok){
         throw Error("could not fetch data !")
       }
-      setPending(false)
-
       return res.json()
       
-    }).then((convert)=>{
-      setCrypt(convert.data)
-      loadStorage(convert.data)
+    }).then(async (convert)=>{
+      
+           //  clearCoins()
 
+
+           //load all coin
+        var convert_coins = []
+
+  
+        try{
+          
+          console.log("load coins 1")
+
+            let value = await AsyncStorage.getItem('coins');
+            if (value != null){
+              loadCoins(convert.data)
+            }
+            else {
+             
+   convert.data.map((item)=>{
+         convert_coins.push({value: item.quote.USD.price, name: item.name})
+        })
+          saveCoins(convert_coins)
+  setCrypt(
+convert.data.map((item)=>{
+  return {
+      id: 1,
+      name: item.name,
+      symbol: item.symbol,
+      price: item.quote.USD.price.toString().substring(0,3),
+      other: ""
+    } 
+}
+  ))
+           }
+
+
+        }catch(erro){
+          console.log("erro no catch ")
+          
+       
+        }
+        
+       
       navigation.addListener("focus",()=>{
         console.log("focus ")
      if(convert.data.length>0){
@@ -37,6 +75,12 @@ console.log("use effect home")
       } ;
       })
     })
+   
+    .then(Item =>{
+  setPending(false)
+
+    })
+   
     .catch(error =>{
       alert("Please check your internet "+error.message)
     })
@@ -44,7 +88,7 @@ console.log("use effect home")
    
   },[navigation])
 
-  const addFav = (item) =>{
+ /* const addFav = (item) =>{
     var alreadyIn = false;
     favorite.map((i)=> {
         if(item.id==i.id){
@@ -55,42 +99,137 @@ console.log("use effect home")
       setFavorite([...favorite, {id: item.id, name: item.name, symbol: item.symbol, price: item.quote.USD.price }])
 
     }
+  }*/
+
+
+
+  const onPress = (item) =>{
+  navigation.navigate('Details', {id: item.id, name: item.name, price: item.price, symbol: item.symbol, slug: item.slug, rank: item.cmc_rank})
+}
+
+
+const saveCoins = (c) =>{
+  storage.save({
+    key: 'coins', 
+    data: {
+      BTC:  c[0].value,
+      ETH:  c[1].value,
+      USDT: c[2].value,
+      BNB: c[3].value,
+      SOL:  c[4].value,
+    },
+    expires: 5000 * 3600
+  });
+
+  
+ 
+}
+
+const clearCoins = async (c) =>{
+ 
+  try {
+    const allKeys = await AsyncStorage.getAllKeys(); // Get all keys from AsyncStorage
+    await AsyncStorage.multiRemove(allKeys); // Remove all keys
+
+    // Display a success message or perform any other actions
+    console.log('All data deleted successfully!');
+  } catch (error) {
+    // Handle error
+    console.log('Error deleting data:', error);
   }
+ return c
+}
+
+const loadCoins = async (allCoins) =>{
+
+  var erro = false;
+  storage
+  .load({
+    key: 'coins',
+    autoSync: true,
+    syncInBackground: true,
+    syncParams: {
+      extraFetchOptions: {
+      },
+      someFlag: true
+    }
+  })
+  .then(ret => {
+  
+
+    var data = [
+      {
+        symbol : "BTC",
+        price: ret.BTC
+      },
+      {
+        symbol : "ETH",
+        price: ret.ETH
+      },
+
+      {
+        symbol : "USDT",
+        price: ret.USDT
+      },
+
+      {
+        symbol : "BNB",
+        price: ret.BNB
+      },
+
+      {
+        symbol : "SOL",
+        price: ret.SOL
+      },
+    ]
 
 
+    var final = []
+    console.log("leng crypt: "+allCoins.length)
+    for(var coin =0; coin< allCoins.length; coin++){
 
-  const onLongPress = (item) =>{
-  navigation.navigate('Details', {id: item.id, name: item.name, price: item.quote.USD.price, symbol: item.symbol, slug: item.slug, rank: item.cmc_rank})
+      var cry = allCoins[coin]
+      for(var old =0; old< data.length; old++){
+
+
+        var older = data[old]
+
+        if(cry.symbol == older.symbol){   
+          console.log("entrou "+cry.symbol+" __ "+older.symbol)
+            final.push( {  id: cry.id,
+        name: cry.name,
+        price: cry.quote.USD.price.toString().substring(0,3), 
+        symbol: cry.symbol, 
+        other: older.price.toString().substring(0,3)})
+        }
+
+   
+      }
+    }
+
+    setCrypt(final)
+     
+  }).catch(erro=>{
+    console.log("error")
+    erro = true
+  })
+
+  return erro
 }
 
 const loadStorage = (allCrypt) =>{
   storage
   .load({
     key: 'favorite',
-
-    // autoSync (default: true) means if data is not found or has expired,
-    // then invoke the corresponding sync method
     autoSync: true,
-
-    // syncInBackground (default: true) means if data expired,
-    // return the outdated data first while invoking the sync method.
-    // If syncInBackground is set to false, and there is expired data,
-    // it will wait for the new data and return only after the sync completed.
-    // (This, of course, is slower)
     syncInBackground: true,
-
-    // you can pass extra params to the sync method
-    // see sync example below
     syncParams: {
       extraFetchOptions: {
-        // blahblah
       },
       someFlag: true
     }
   })
   .then(ret => {
-    // found data go to then()
-
     if(
       ret.id.includes(",") ){
 
@@ -116,28 +255,42 @@ const loadStorage = (allCrypt) =>{
       allCrypt.map((cry)=>{
         if(cry.id==ret.id){
 
-   setFavorite([...favorite, {id: ret.id, name: cry.name, symbol: cry.symbol, price: cry.quote.USD.price }])
+   setFavorite([ {id: ret.id, name: cry.name, symbol: cry.symbol, price: cry.quote.USD.price }])
         }
       })
     }
   
   })
 }
-if(pending){
+if(pending ){
   return <View style={styles.container}><Text  > Loading ...</Text></View>
 }else{
 
 }
   return (
     
-     <View style={styles.container}><FlatList data={crypt} renderItem={({item})=>
-<Card key={item.id} style={styles.column}   onLongPress={()=>onLongPress(item)} >
-<Image  source={{uri: 'https://www.criptofacil.com/wp-content/uploads/2023/11/pouco-bitcoin-nas-exchanges-1536x806.jpg.webp'}}
+     <View style={styles.container}>
+      <FlatList data={crypt} renderItem={({item})=>
+<Card key={item.id} style={styles.row_card}   onPress={()=>onPress(item)} >
+
+
+  <Image  source={{uri: 'https://www.criptofacil.com/wp-content/uploads/2023/11/pouco-bitcoin-nas-exchanges-1536x806.jpg.webp'}}
   style={{width: 40, height: 40}}></Image>
 
-<Text  > Name: {item.name} {item.symbol}</Text>
+<View style={{flex: 1, flexDirection: 'column', border: ''}}>
+<Text  > {item.name} </Text>
+<View style={{flex: 1,flexDirection: 'row'}}>
+<Text  style={{fontSize: 10}}> {item.symbol} </Text>
+<Text  style={{fontSize: 10, color: (Number(item.price)>Number(item.other))?'green' :Number(item.price)==Number(item.other)? 'grey':'red'}}> {item.price} $  </Text>
+<Text   style={{fontSize: 10, color: (Number(item.price)>Number(item.other))?'green'  :Number(item.price)==Number(item.other)? 'grey': 'red'}}>{(Number(item.price)>Number(item.other))?"↑" :(Number(item.price)<Number(item.other))? "↓" : "-"}   </Text>
+{ item.other==""? <Text   style={{fontSize: 10}}> </Text>: <Text   style={{fontSize: 10}}>( {item.other} $ ) </Text>}
 
-<Text  style={{fontSize: 10}}>Price: {item.quote.USD.price} </Text>
+</View>
+
+
+
+
+</View>
       </Card>
      
       }></FlatList>
@@ -173,10 +326,21 @@ const styles = StyleSheet.create({
     },
     row: {
       flex: 1,
+      height: 400,
       flexDirection: 'row'
     },
     column: {
       flex: 1,
+      width: 300,
+      padding: 5,
+      marginTop: 5
+    },
+    row_card: {
+      flex: 1,
+      flexDirection: 'row',
+      width: 300,
+      padding: 5,
+      marginTop: 5,
     },
   });
   
