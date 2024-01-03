@@ -53,6 +53,8 @@ convert.data.map((item)=>{
       name: item.name,
       symbol: item.symbol,
       price: item.quote.USD.price.toString().substring(0,3),
+      slug: item.slug,
+      rank: item.cmc_rank,
       other: ""
     } 
 }
@@ -66,7 +68,8 @@ convert.data.map((item)=>{
        
         }
         
-       
+        setFavorite([])
+        loadStorage(convert.data)
       navigation.addListener("focus",()=>{
         console.log("focus ")
      if(convert.data.length>0){
@@ -88,23 +91,12 @@ convert.data.map((item)=>{
    
   },[navigation])
 
- /* const addFav = (item) =>{
-    var alreadyIn = false;
-    favorite.map((i)=> {
-        if(item.id==i.id){
-          alreadyIn = true;
-        }
-    })
-    if(!alreadyIn){
-      setFavorite([...favorite, {id: item.id, name: item.name, symbol: item.symbol, price: item.quote.USD.price }])
 
-    }
-  }*/
 
 
 
   const onPress = (item) =>{
-  navigation.navigate('Details', {id: item.id, name: item.name, price: item.price, symbol: item.symbol, slug: item.slug, rank: item.cmc_rank})
+  navigation.navigate('Details', {id: item.id, name: item.name, price: item.price, symbol: item.symbol, slug: item.slug, rank: item.rank})
 }
 
 
@@ -200,6 +192,8 @@ const loadCoins = async (allCoins) =>{
         name: cry.name,
         price: cry.quote.USD.price.toString().substring(0,3), 
         symbol: cry.symbol, 
+        slug: cry.slug,
+      rank: cry.cmc_rank,
         other: older.price.toString().substring(0,3)})
         }
 
@@ -296,26 +290,19 @@ if(pending ){
       }></FlatList>
 <View  style={styles.row}>
       {favorite.map((fav)=> {
-        return  <Card  key={fav.id} style={styles.column}> 
+        return  <Card  key={fav.id} style={{flex: 1, flexDirection: 'row', paddingLeft: 10}}> 
         
-        <Image  source={{uri: 'https://www.criptofacil.com/wp-content/uploads/2023/11/pouco-bitcoin-nas-exchanges-1536x806.jpg.webp'}} style={{width: 20, height: 20}}></Image>  
+        <Image  source={{uri: 'https://www.criptofacil.com/wp-content/uploads/2023/11/pouco-bitcoin-nas-exchanges-1536x806.jpg.webp'}} style={{width: 15, height: 15}}></Image>  
         
-        <Text > {fav.name} {fav.symbol}</Text>
+        <Text style={{fontSize: 8}}> {fav.name} {fav.symbol}</Text>
 
-<Text > {fav.price} </Text>
+<Text style={{fontSize: 8}}> {fav.price} </Text>
 </Card>
       })}
       </View>
       <StatusBar style="auto" />
-     
-     
-    
     </View> 
-     
   );
-
-
-    
 }
 const styles = StyleSheet.create({
     container: {
@@ -326,8 +313,7 @@ const styles = StyleSheet.create({
     },
     row: {
       flex: 1,
-      height: 400,
-      flexDirection: 'row'
+      flexDirection: 'row',
     },
     column: {
       flex: 1,

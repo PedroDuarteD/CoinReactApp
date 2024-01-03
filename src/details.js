@@ -4,6 +4,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { NavigationContainer, useRoute } from '@react-navigation/native';
 import { Button, Card } from 'react-native-paper';
 import { Linking } from 'react-native';
+import { ToastAndroid } from 'react-native';
 import storage from './storage';
 
 function AppDetails (){
@@ -80,7 +81,34 @@ loadStorage()
     });
   }
   const favorite = (item) =>{
-    storage.save({
+    var save = true;
+
+      if(allFavorite.includes(",")){
+
+        var contador = 0
+        allFavorite.split(", ").map((coin)=>{
+          if(coin==item.id.toString()){
+            save = false;
+            
+          }
+          contador +=1
+        })
+
+        if(contador==4){
+          save = false
+        }
+
+      }else if(allFavorite==item.id.toString()){
+        save = false
+      }
+    
+
+      if(!save && contador==4){
+        ToastAndroid.show("Não podes adicionar mais !",ToastAndroid.SHORT)
+
+      } else if(save){
+        ToastAndroid.show("adicionado !",ToastAndroid.SHORT)
+        storage.save({
       key: 'favorite', // Note: Do not use underscore("_") in key!
       data: {
         id: allFavorite==""? item.id.toString(): allFavorite+", "+item.id.toString(),
@@ -89,6 +117,11 @@ loadStorage()
       // if set to null, then it will never expire.
       expires: 1000 * 3600
     });
+    }else{
+      ToastAndroid.show("Error Já está nos favoritos ! ",ToastAndroid.SHORT)
+
+    }
+   
   }
   const route = useRoute()
 
