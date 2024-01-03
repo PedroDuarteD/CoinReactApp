@@ -1,7 +1,7 @@
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useState } from 'react';
 import {Card, Button , Title ,Paragraph } from 'react-native-paper'; 
-import { FlatList, Image, StyleSheet, Text, View } from 'react-native';
+import { FlatList, Image, StyleSheet, Text, View, TextInput } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useNavigation } from '@react-navigation/native';
@@ -11,6 +11,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 export default function HomePage(){
   const [crypt, setCrypt] = useState([]);
   const [pending, setPending] = useState(true);
+  const [search, setSearch] = useState("");
+  const [nocoin, setNoCoin] = useState(true);
 
     const [favorite, setFavorite] = useState([]);
 
@@ -55,6 +57,7 @@ convert.data.map((item)=>{
       price: item.quote.USD.price.toString().substring(0,3),
       slug: item.slug,
       rank: item.cmc_rank,
+      visible: true,
       other: ""
     } 
 }
@@ -192,6 +195,7 @@ const loadCoins = async (allCoins) =>{
         name: cry.name,
         price: cry.quote.USD.price.toString().substring(0,3), 
         symbol: cry.symbol, 
+      visible: true,
         slug: cry.slug,
       rank: cry.cmc_rank,
         other: older.price.toString().substring(0,3)})
@@ -209,6 +213,60 @@ const loadCoins = async (allCoins) =>{
   })
 
   return erro
+}
+
+
+const ChangeText = (e)=>{
+  setSearch(e)
+  console.log("tex: "+e)
+
+  if(e==""){
+    setNoCoin(true)
+    setCrypt(crypt.map(item =>{
+ return {
+  id: 1,
+      name: item.name,
+      symbol: item.symbol,
+      price: item.price,
+      slug: item.slug,
+      rank: item.rank,
+      visible: true,
+      other: item.other}
+}))
+  }else{
+
+var no = false
+    setCrypt(
+     crypt.map(item =>{
+    if(item.slug.toString().includes(e.toLowerCase())){
+      no = true
+      return {
+        id: 1,
+            name: item.name,
+            symbol: item.symbol,
+            price: item.price,
+            slug: item.slug,
+            rank: item.rank,
+            visible: true,
+            other: item.other}
+    }else{
+      return {
+        id: 1,
+            name: item.name,
+            symbol: item.symbol,
+            price: item.price,
+            slug: item.slug,
+            rank: item.rank,
+            visible: false,
+            other: item.other}
+    }
+  }))
+
+  setNoCoin(no)
+  }
+
+ 
+
 }
 
 const loadStorage = (allCrypt) =>{
@@ -261,17 +319,26 @@ if(pending ){
 }else{
 
 }
+
+
+
+
   return (
     
      <View style={styles.container}>
-      <FlatList data={crypt} renderItem={({item})=>
-<Card key={item.id} style={styles.row_card}   onPress={()=>onPress(item)} >
+      <TextInput style={styles.input} placeholder='Coin' onChangeText={(e)=>ChangeText(e)} value={search}/>
+    {!nocoin? <Text  > Sem Coins </Text>:<FlatList style={{height: 300, marginBottom: 10, marginTop: 10}} data={crypt} renderItem={({item}) =>{
+
+if(item.visible){
+
+
+        return <Card key={item.id} style={styles.row_card}   onPress={()=>onPress(item)} >
 
 
   <Image  source={{uri: 'https://www.criptofacil.com/wp-content/uploads/2023/11/pouco-bitcoin-nas-exchanges-1536x806.jpg.webp'}}
   style={{width: 40, height: 40}}></Image>
 
-<View style={{flex: 1, flexDirection: 'column', border: ''}}>
+<View style={{flex: 1, flexDirection: 'column'}}>
 <Text  > {item.name} </Text>
 <View style={{flex: 1,flexDirection: 'row'}}>
 <Text  style={{fontSize: 10}}> {item.symbol} </Text>
@@ -286,17 +353,21 @@ if(pending ){
 
 </View>
       </Card>
+   }
+    }
+
      
-      }></FlatList>
+      }></FlatList>}
+      
 <View  style={styles.row}>
       {favorite.map((fav)=> {
         return  <Card  key={fav.id} style={{flex: 1, flexDirection: 'row', paddingLeft: 10}}> 
         
-        <Image  source={{uri: 'https://www.criptofacil.com/wp-content/uploads/2023/11/pouco-bitcoin-nas-exchanges-1536x806.jpg.webp'}} style={{width: 15, height: 15}}></Image>  
+        <Image style={{paddingTop: 10,width: 15, height: 15}}  source={{uri: 'https://www.criptofacil.com/wp-content/uploads/2023/11/pouco-bitcoin-nas-exchanges-1536x806.jpg.webp'}}></Image>  
         
-        <Text style={{fontSize: 8}}> {fav.name} {fav.symbol}</Text>
+        <Text style={{fontSize: 10}}> {fav.name} {fav.symbol}</Text>
 
-<Text style={{fontSize: 8}}> {fav.price} </Text>
+<Text style={{fontSize: 8}}> {fav.price.toString().substring(0,3)} </Text>
 </Card>
       })}
       </View>
@@ -314,6 +385,8 @@ const styles = StyleSheet.create({
     row: {
       flex: 1,
       flexDirection: 'row',
+      paddingTop: 10,
+      height: 100
     },
     column: {
       flex: 1,
@@ -328,6 +401,14 @@ const styles = StyleSheet.create({
       padding: 5,
       marginTop: 5,
     },
+    input: {
+      height: 40,
+      width: 300,
+      borderWidth: 1,
+      padding: 10,
+      borderRadius: 5,
+      marginTop: 10
+    }
   });
   
 
