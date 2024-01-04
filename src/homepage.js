@@ -119,7 +119,8 @@ export default function HomePage(){
 
 
   const onPress = (item) =>{
-  navigation.navigate('Details', {id: item.id, name: item.name, price: item.price, symbol: item.symbol, slug: item.slug, rank: item.rank, url: item.url})
+    
+    navigation.navigate('Details', {id: item.id, name: item.name, price: item.price, symbol: item.symbol, slug: item.slug, rank: item.rank, url: item.url})
 }
 
 
@@ -261,7 +262,7 @@ other =  await loadCoins( item.slug.toLowerCase())
      })
   }else{
 
-
+setPending(true)
     fetch(
       mobile? "https://pro-api.coinmarketcap.com/v1/cryptocurrency/listings/latest?start=1&limit=500&convert=USD&CMC_PRO_API_KEY=abd21725-e7b1-4b5a-a84c-4c4067692ebb":
       "https://cryptocoinback.pedroduarte.online/api/all",{
@@ -306,7 +307,7 @@ console.log("url: ",url)
 
 
 
-
+setPending(false)
     setCrypt(
       list
     )
@@ -369,7 +370,6 @@ for(var index=0; index <allCrypt.length; index++){
 var item = allCrypt[index]
 if(item.id==ret.id){
   const logo  = await loadLogo(item.id, item.slug)
-  console.log("data pe: ",item)
   setFavorite([ {id: ret.id, name: item.name,url: logo, symbol: item.symbol, price: item.quote.USD.price.toString().substring(0,5), slug: item.slug, rank: item.cmc_rank }])
 
   }
@@ -396,10 +396,10 @@ if(pending ){
 
 
 
-        return <Card key={item.id} style={styles.row_card}   onPress={()=>onPress(item)} >
+        return <Card key={item.id} style={styles.row_card}  onLongPress={()=>alert("_"+item.other+"_")} onPress={()=>onPress(item)} >
 
 
-{item.url==""? <Text  > Sem Imagem </Text>: <Image  source={{uri: item.url}}
+{item.url==""? <Text style={{fontSize: 10}}  > Sem Imagem </Text>: <Image  source={{uri: item.url}}
   style={{width: 40, height: 40}}></Image> }
  
 
@@ -407,9 +407,9 @@ if(pending ){
 <Text  > {item.name} </Text>
 <View style={{flex: 1,flexDirection: 'row'}}>
 <Text  style={{fontSize: 10}}> {item.symbol} </Text>
-<Text  style={{fontSize: 10, color: (Number(item.price)>Number(item.other))?'green' :Number(item.price)==Number(item.other)? 'grey':'red'}}> {item.price} $  </Text>
-<Text   style={{fontSize: 10, color: (Number(item.price)>Number(item.other))?'green'  :Number(item.price)==Number(item.other)? 'grey': 'red'}}>{(Number(item.price)>Number(item.other))?"↑" :(Number(item.price)<Number(item.other))? "↓" : "-"}   </Text>
-{ item.other==""? <Text   style={{fontSize: 10}}> </Text>: <Text   style={{fontSize: 10}}>( {item.other} $ ) </Text>}
+<Text  style={{fontSize: 10, color: (item.other==""||item.other==undefined ?'green' :Number(item.price)>Number(item.other))?'green' :Number(item.price)==Number(item.other)? 'grey':'red'}}> {item.price} $  </Text>
+<Text   style={{fontSize: 10, color: (item.other==""||item.other==undefined ?'green' :Number(item.price)>Number(item.other))?'green'  :Number(item.price)==Number(item.other)? 'grey': 'red'}}>{item.other==""||item.other==undefined? "↑":(Number(item.price)>Number(item.other))?"↑" :(Number(item.price)<Number(item.other))? "↓" : "-"}   </Text>
+{ item.other=="" || item.other==undefined? <Text   style={{fontSize: 10}}> </Text>: <Text   style={{fontSize: 10}}>( {item.other} $ ) </Text>}
 
 </View>
 
@@ -426,7 +426,7 @@ if(pending ){
 <View  style={styles.row}>
       {favorite.map((fav)=> {
         return  <Card  key={fav.id} onPress={()=>onPress(fav)} style={{flex: 1, flexDirection: 'row', paddingLeft: 10}}> 
-       {fav.url=""? <Text style={{fontSize: 10}}> Sem Image</Text> : <Image style={{paddingTop: 10,width: 30, height: 30}}  source={{uri: fav.url}}></Image>  } 
+       {fav.url=="" || fav.url==undefined? <Text style={{fontSize: 10}}> Sem Image</Text> : <Image style={{paddingTop: 10,width: 30, height: 30}}  source={{uri: fav.url}}></Image>  } 
        
         
        <Text style={{fontSize: 10}}> {fav.name} {fav.symbol}</Text>
@@ -451,11 +451,16 @@ const styles = StyleSheet.create({
       alignItems: 'center',
       justifyContent: 'center',
     },
+   
     row: {
       flex: 1,
       flexDirection: 'row',
       paddingTop: 10,
       height: 100
+    },
+    button: {
+      flex: 0.5,
+      alignItems: 'center',
     },
     column: {
       flex: 1,
