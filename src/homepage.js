@@ -16,17 +16,18 @@ export default function HomePage(){
 
     const [favorite, setFavorite] = useState([]);
 
+
     const navigation = useNavigation();
   useEffect(()=>{
     fetch("https://pro-api.coinmarketcap.com/v1/cryptocurrency/listings/latest?start=1&limit=5&convert=USD&CMC_PRO_API_KEY=abd21725-e7b1-4b5a-a84c-4c4067692ebb")
     .then((res)=>{
-      if(!res.ok){
-        throw Error("could not fetch data !")
-      }
-      return res.json()
+        if(!res.ok){
+          throw Error("could not fetch data !")
+        }
+        return res.json()
       
-    }).then(async (convert)=>{
-      
+     }).then(async (convert)=>{
+      console.log("consola ",convert)
            //  clearCoins()
 
 
@@ -51,7 +52,7 @@ export default function HomePage(){
   setCrypt(
 convert.data.map((item)=>{
   return {
-      id: 1,
+      id: item.id,
       name: item.name,
       symbol: item.symbol,
       price: item.quote.USD.price.toString().substring(0,3),
@@ -66,8 +67,26 @@ convert.data.map((item)=>{
 
 
         }catch(erro){
-          console.log("erro no catch ")
-          
+          console.log("erro no catch ",convert)
+          console.log("erro no catch ",convert)
+          convert.data.map((item)=>{
+            convert_coins.push({value: item.quote.USD.price, name: item.name})
+           })
+             //saveCoins(convert_coins)
+     setCrypt(
+   convert.data.map((item)=>{
+     return {
+         id: item.id,
+         name: item.name,
+         symbol: item.symbol,
+         price: item.quote.USD.price.toString().substring(0,3),
+         slug: item.slug,
+         rank: item.cmc_rank,
+         visible: true,
+         other: ""
+       } 
+   }
+     ))
        
         }
         
@@ -224,7 +243,7 @@ const ChangeText = (e)=>{
     setNoCoin(true)
     setCrypt(crypt.map(item =>{
  return {
-  id: 1,
+  id: item.id,
       name: item.name,
       symbol: item.symbol,
       price: item.price,
@@ -241,7 +260,7 @@ var no = false
     if(item.slug.toString().includes(e.toLowerCase())){
       no = true
       return {
-        id: 1,
+        id: item.id,
             name: item.name,
             symbol: item.symbol,
             price: item.price,
@@ -251,7 +270,7 @@ var no = false
             other: item.other}
     }else{
       return {
-        id: 1,
+        id: item.id,
             name: item.name,
             symbol: item.symbol,
             price: item.price,

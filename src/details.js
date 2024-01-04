@@ -4,7 +4,6 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { NavigationContainer, useRoute } from '@react-navigation/native';
 import { Button, Card } from 'react-native-paper';
 import { Linking } from 'react-native';
-import { ToastAndroid } from 'react-native';
 import storage from './storage';
 
 function AppDetails (){
@@ -104,10 +103,10 @@ loadStorage()
     
 
       if(!save && contador==4){
-        ToastAndroid.show("Não podes adicionar mais !",ToastAndroid.SHORT)
+        alert("Não podes adicionar mais !")
 
       } else if(save){
-        ToastAndroid.show("adicionado !",ToastAndroid.SHORT)
+       alert("adicionado !")
         storage.save({
       key: 'favorite', // Note: Do not use underscore("_") in key!
       data: {
@@ -118,7 +117,7 @@ loadStorage()
       expires: 1000 * 3600
     });
     }else{
-      ToastAndroid.show("Error Já está nos favoritos ! ",ToastAndroid.SHORT)
+     alert("Error","Já tens favoritos ! ")
 
     }
    
