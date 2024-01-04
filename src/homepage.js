@@ -12,16 +12,18 @@ export default function HomePage(){
   const [crypt, setCrypt] = useState([]);
   const [pending, setPending] = useState(true);
   const [search, setSearch] = useState("");
-  const [nocoin, setNoCoin] = useState(true);
 
     const [favorite, setFavorite] = useState([]);
 
     var mobile = true
 
     const navigation = useNavigation();
+
+
+
   useEffect(()=>{
     fetch(
-      mobile? "https://pro-api.coinmarketcap.com/v1/cryptocurrency/listings/latest?start=1&limit=5&convert=USD&CMC_PRO_API_KEY=abd21725-e7b1-4b5a-a84c-4c4067692ebb":
+      mobile? "https://pro-api.coinmarketcap.com/v1/cryptocurrency/listings/latest?start=1&limit=10&convert=USD&CMC_PRO_API_KEY=abd21725-e7b1-4b5a-a84c-4c4067692ebb":
       "https://cryptocoinback.pedroduarte.online/api/data",{
     })
     .then((res)=>{
@@ -32,82 +34,63 @@ export default function HomePage(){
       
      }).then(async (convert)=>{
      
-   //clearCoins()
+ // clearCoins()
 
            //load all coin
-        var convert_coins = []
+      
 
-  
-        try{
-          
-          console.log("load coins 1")
+           var list = []
 
-            let value = await AsyncStorage.getItem('coins');
+           for(var globalIndex=0; globalIndex< convert.data.length; globalIndex++){
+
+              var coin = convert.data[globalIndex]
+
+            //Verify if is in storage
+            var value = await AsyncStorage.getItem(coin.slug.toLowerCase());
             if (value!=null){
-              console.log("um dois")
-              loadCoins(convert.data)
+             const save = await loadCoins( coin.slug.toLowerCase())
+           console.log("valor do storage: ",save)
+
+           var url = await loadLogo(coin.id, coin.slug)
+
+              list.push({
+                id: coin.id,
+                name: coin.name,
+                symbol: coin.symbol,
+                price: coin.quote.USD.price.toString().substring(0,5),
+                slug: coin.slug,
+          url: url,
+                rank: coin.cmc_rank,
+                other: save.value
+
+              })
+
+
+            }else{
+              console.log("save to storage: ",coin.name)
+              saveCoins({name: coin.slug.toLowerCase(), value: coin.quote.USD.price.toString().substring(0,5)})
+              var url = await loadLogo(coin.id, coin.slug)
+              list.push({
+                id: coin.id,
+                name: coin.name,
+                symbol: coin.symbol,
+                price: coin.quote.USD.price.toString().substring(0,5),
+                slug: coin.slug,
+          url: url,
+                rank: coin.cmc_rank,
+                other: ""
+
+              })
             }
-            else {
-             
-   convert.data.map((item)=>{
-         convert_coins.push({value: item.quote.USD.price, name: item.name})
-        })
-          saveCoins(convert_coins)
 
-
-const cr =convert.data.map((item)=>{
-
-  return {
-      id: item.id,
-      name: item.name,
-      symbol: item.symbol,
-      price: item.quote.USD.price.toString().substring(0,5),
-      slug: item.slug,
-      rank: item.cmc_rank,
-      url: "",
-      visible: true,
-      other: ""
-    } 
-}
-  )
-
-  for(var index=0; index< cr.length; index++){
-    var c =  cr[index]
-   const url = await loadLogo(c.id, c.slug)
-   c.url = url;
-  }
-
-  setCrypt(
-    cr
-)
            }
 
 
-        }catch(erro){
-          
 
-          console.log("erro no catch ",erro.message)
-          console.log("erro no catch ",convert)
-          convert.data.map((item)=>{
-            convert_coins.push({value: item.quote.USD.price, name: item.name})
-           })
-             //saveCoins(convert_coins)
-     setCrypt(
-   convert.data.map((item)=>{
-     return {
-         id: item.id,
-         name: item.name,
-         symbol: item.symbol,
-         price: item.quote.USD.price.toString().substring(0,5),
-         slug: item.slug,
-         rank: item.cmc_rank,
-         visible: true,
-         other: ""
-       } 
-   }
-     ))
-       
-        }
+           setCrypt(
+            list
+        )
+
         setFavorite([])
         loadStorage(convert.data)
       navigation.addListener("focus",()=>{
@@ -142,13 +125,9 @@ const cr =convert.data.map((item)=>{
 
 const saveCoins = (c) =>{
   storage.save({
-    key: 'coins', 
+    key: c.name, 
     data: {
-      BTC:  c[0].value,
-      ETH:  c[1].value,
-      USDT: c[2].value,
-      BNB: c[3].value,
-      SOL:  c[4].value,
+      value: c.value
     },
     expires: 5000 * 3600
   });
@@ -172,12 +151,12 @@ const clearCoins = async (c) =>{
  return c
 }
 
-const loadCoins = async (allCoins) =>{
+const loadCoins = async (name) =>{
 
-  var erro = false;
-  storage
+var save = "";
+  await storage
   .load({
-    key: 'coins',
+    key: name,
     autoSync: true,
     syncInBackground: true,
     syncParams: {
@@ -188,71 +167,24 @@ const loadCoins = async (allCoins) =>{
   })
   .then(async ret => {
   
+    console.log("valor do storaeg   kkk ",ret)
+   save = ret
 
-    var data = [
-      {
-        symbol : "BTC",
-        price: ret.BTC
-      },
-      {
-        symbol : "ETH",
-        price: ret.ETH
-      },
+   return ret
 
-      {
-        symbol : "USDT",
-        price: ret.USDT
-      },
-
-      {
-        symbol : "BNB",
-        price: ret.BNB
-      },
-
-      {
-        symbol : "SOL",
-        price: ret.SOL
-      },
-    ]
-
-
-    var final = []
-    console.log("leng crypt: "+allCoins.length)
-    for(var coin =0; coin< allCoins.length; coin++){
-
-      var cry = allCoins[coin]
-      for(var old =0; old< data.length; old++){
-
-
-        var older = data[old]
-
-        if(cry.symbol == older.symbol){   
-          const url = await loadLogo(cry.id,cry.slug)
-          console.log("entrou "+cry.symbol+" __ "+older.symbol)
-            final.push( {  id: cry.id,
-        name: cry.name,
-        price: cry.quote.USD.price.toString().substring(0,5), 
-        symbol: cry.symbol, 
-      visible: true,
-      url: url,
-        slug: cry.slug,
-      rank: cry.cmc_rank,
-        other: older.price.toString().substring(0,5)})
-        }
-
-   
-      }
-    }
-
-    setCrypt(final)
      
   }).catch(erro=>{
     console.log("error pe ",erro.message)
-    erro = true
   })
+  console.log("valor especifico storeage return ",save)
+  return save
+  }
 
-  return erro
-}
+
+ 
+
+
+  
 
 async function loadLogo  (id,slug) {
   var url = "";
@@ -263,6 +195,9 @@ async function loadLogo  (id,slug) {
        })
        .then(item=>{
         url=item.data[id].logo
+       })
+       .catch(erro=>{
+        console.log("erro ",erro.message)
        })
 
        return url
@@ -277,7 +212,7 @@ const ChangeText = (e)=>{
 
     fetch(
       mobile? "https://pro-api.coinmarketcap.com/v1/cryptocurrency/listings/latest?start=1&limit=10&convert=USD&CMC_PRO_API_KEY=abd21725-e7b1-4b5a-a84c-4c4067692ebb":
-      "https://cryptocoinback.pedroduarte.online/api/all",{
+      "https://cryptocoinback.pedroduarte.online/api/data",{
     })
     .then((res)=>{
         if(!res.ok){
@@ -287,9 +222,6 @@ const ChangeText = (e)=>{
       
      })
      .then(async json =>{
-var no = false
-
-
 
 var list = []
 
@@ -297,10 +229,16 @@ var list = []
 for(var index=0; index <json.data.length; index++){
   var item = json.data[index]
 
-  no = true
 
 const url = await loadLogo(item.id, item.slug)
-console.log("url: ",url)
+
+
+var other=""
+var value = await AsyncStorage.getItem(item.slug.toLowerCase());
+if(value!=null){
+other =  await loadCoins( item.slug.toLowerCase())
+}
+
   list.push( {
     id: item.id,
         name: item.name,
@@ -310,7 +248,7 @@ console.log("url: ",url)
   url: url,
         rank: item.cmc_rank,
        
-        other: ""})
+        other: other.value})
 }
 
 
@@ -325,7 +263,7 @@ console.log("url: ",url)
 
 
     fetch(
-      mobile? "https://pro-api.coinmarketcap.com/v1/cryptocurrency/listings/latest?start=1&limit=10&convert=USD&CMC_PRO_API_KEY=abd21725-e7b1-4b5a-a84c-4c4067692ebb":
+      mobile? "https://pro-api.coinmarketcap.com/v1/cryptocurrency/listings/latest?start=1&limit=500&convert=USD&CMC_PRO_API_KEY=abd21725-e7b1-4b5a-a84c-4c4067692ebb":
       "https://cryptocoinback.pedroduarte.online/api/all",{
     })
     .then((res)=>{
@@ -336,9 +274,6 @@ console.log("url: ",url)
       
      })
      .then(async json =>{
-var no = false
-
-
 
 var list = []
 
@@ -347,9 +282,14 @@ for(var index=0; index <json.data.length; index++){
   var item = json.data[index]
 
   if(item.slug.toString().includes(e.toLowerCase())){
-  no = true
 
 const url = await loadLogo(item.id, item.slug)
+
+var value = await AsyncStorage.getItem(item.slug.toLowerCase());
+var other=""
+if (value!=null){
+  other = await loadCoins( item.slug.toLowerCase())
+}
 console.log("url: ",url)
   list.push( {
     id: item.id,
@@ -360,7 +300,7 @@ console.log("url: ",url)
   url: url,
         rank: item.cmc_rank,
        
-        other: ""})
+        other: other.value})
 }
 }
 
@@ -370,7 +310,6 @@ console.log("url: ",url)
     setCrypt(
       list
     )
- // setNoCoin(no)
 
      })
 
@@ -445,7 +384,6 @@ if(pending ){
   return <View style={styles.container}><Text  > Loading ...</Text></View>
 }else{
 
-}
 
 
 
@@ -461,8 +399,9 @@ if(pending ){
         return <Card key={item.id} style={styles.row_card}   onPress={()=>onPress(item)} >
 
 
-  <Image  source={{uri: item.url}}
-  style={{width: 40, height: 40}}></Image>
+{item.url==""? <Text  > Sem Imagem </Text>: <Image  source={{uri: item.url}}
+  style={{width: 40, height: 40}}></Image> }
+ 
 
 <View style={{flex: 1, flexDirection: 'column'}}>
 <Text  > {item.name} </Text>
@@ -487,10 +426,10 @@ if(pending ){
 <View  style={styles.row}>
       {favorite.map((fav)=> {
         return  <Card  key={fav.id} onPress={()=>onPress(fav)} style={{flex: 1, flexDirection: 'row', paddingLeft: 10}}> 
+       {fav.url=""? <Text style={{fontSize: 10}}> Sem Image</Text> : <Image style={{paddingTop: 10,width: 30, height: 30}}  source={{uri: fav.url}}></Image>  } 
+       
         
-        <Image style={{paddingTop: 10,width: 30, height: 30}}  source={{uri: fav.url}}></Image>  
-        
-        <Text style={{fontSize: 10}}> {fav.name} {fav.symbol}</Text>
+       <Text style={{fontSize: 10}}> {fav.name} {fav.symbol}</Text>
 
 <Text style={{fontSize: 8}}> {fav.price.toString().substring(0,5)} </Text>
 </Card>
@@ -499,6 +438,11 @@ if(pending ){
       <StatusBar style="auto" />
     </View> 
   );
+
+
+  
+
+}
 }
 const styles = StyleSheet.create({
     container: {
@@ -535,6 +479,3 @@ const styles = StyleSheet.create({
       marginTop: 10
     }
   });
-  
-
-  
