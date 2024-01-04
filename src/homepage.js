@@ -273,51 +273,109 @@ const ChangeText = (e)=>{
   console.log("tex: "+e)
 
   if(e==""){
-    setNoCoin(true)
-    setCrypt(crypt.map(item =>{
- return {
-  id: item.id,
-      name: item.name,
-      symbol: item.symbol,
-      price: item.price,
-      slug: item.slug,
-      rank: item.rank,
-      url: item.url,
-      visible: true,
-      other: item.other}
-}))
+
+
+    fetch(
+      mobile? "https://pro-api.coinmarketcap.com/v1/cryptocurrency/listings/latest?start=1&limit=10&convert=USD&CMC_PRO_API_KEY=abd21725-e7b1-4b5a-a84c-4c4067692ebb":
+      "https://cryptocoinback.pedroduarte.online/api/all",{
+    })
+    .then((res)=>{
+        if(!res.ok){
+          throw Error("could not fetch data !")
+        }
+        return res.json()
+      
+     })
+     .then(async json =>{
+var no = false
+
+
+
+var list = []
+
+
+for(var index=0; index <json.data.length; index++){
+  var item = json.data[index]
+
+  no = true
+
+const url = await loadLogo(item.id, item.slug)
+console.log("url: ",url)
+  list.push( {
+    id: item.id,
+        name: item.name,
+        symbol: item.symbol,
+        price: item.quote.USD.price.toString().substring(0,5),
+        slug: item.slug,
+  url: url,
+        rank: item.cmc_rank,
+       
+        other: ""})
+}
+
+
+
+
+    setCrypt(
+      list
+    )
+
+     })
   }else{
 
-var no = false
-    setCrypt(
-     crypt.map(item =>{
-    if(item.slug.toString().includes(e.toLowerCase())){
-      no = true
-      return {
-        id: item.id,
-            name: item.name,
-            symbol: item.symbol,
-            price: item.price,
-            slug: item.slug,
-      url: item.url,
-            rank: item.rank,
-            visible: true,
-            other: item.other}
-    }else{
-      return {
-        id: item.id,
-            name: item.name,
-            symbol: item.symbol,
-            price: item.price,
-            slug: item.slug,
-            rank: item.rank,
-            visible: false,
-      url: item.url,
-            other: item.other}
-    }
-  }))
 
-  setNoCoin(no)
+    fetch(
+      mobile? "https://pro-api.coinmarketcap.com/v1/cryptocurrency/listings/latest?start=1&limit=10&convert=USD&CMC_PRO_API_KEY=abd21725-e7b1-4b5a-a84c-4c4067692ebb":
+      "https://cryptocoinback.pedroduarte.online/api/all",{
+    })
+    .then((res)=>{
+        if(!res.ok){
+          throw Error("could not fetch data !")
+        }
+        return res.json()
+      
+     })
+     .then(async json =>{
+var no = false
+
+
+
+var list = []
+
+
+for(var index=0; index <json.data.length; index++){
+  var item = json.data[index]
+
+  if(item.slug.toString().includes(e.toLowerCase())){
+  no = true
+
+const url = await loadLogo(item.id, item.slug)
+console.log("url: ",url)
+  list.push( {
+    id: item.id,
+        name: item.name,
+        symbol: item.symbol,
+        price: item.quote.USD.price.toString().substring(0,5),
+        slug: item.slug,
+  url: url,
+        rank: item.cmc_rank,
+       
+        other: ""})
+}
+}
+
+
+
+
+    setCrypt(
+      list
+    )
+ // setNoCoin(no)
+
+     })
+
+
+
   }
 
  
@@ -396,9 +454,8 @@ if(pending ){
     
      <View style={styles.container}>
       <TextInput style={styles.input} placeholder='Coin' onChangeText={(e)=>ChangeText(e)} value={search}/>
-    {!nocoin? <Text  > Sem Coins </Text>:<FlatList style={{height: 300, marginBottom: 10, marginTop: 10}} data={crypt} renderItem={({item}) =>{
+    {crypt.length==0? <Text  > Sem Coins </Text>:<FlatList style={{height: 300, marginBottom: 10, marginTop: 10}} data={crypt} renderItem={({item}) =>{
 
-if(item.visible){
 
 
         return <Card key={item.id} style={styles.row_card}   onPress={()=>onPress(item)} >
@@ -422,7 +479,6 @@ if(item.visible){
 
 </View>
       </Card>
-   }
     }
 
      
