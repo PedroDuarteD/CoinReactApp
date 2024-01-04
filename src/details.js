@@ -72,28 +72,23 @@ loadStorage()
 
       if(allFavorite.includes(",")){
 
-        var contador = 0
+       
         allFavorite.split(", ").map((coin)=>{
           if(coin==item.id.toString()){
             save = false;
             
           }
-          contador +=1
+        
         })
 
-        if(contador==4){
-          save = false
-        }
+       
 
       }else if(allFavorite==item.id.toString()){
         save = false
       }
     
 
-      if(!save && contador==4){
-        alert("Não podes adicionar mais !")
-
-      } else if(save){
+    if(save){
        alert("adicionado !")
         storage.save({
       key: 'favorite', // Note: Do not use underscore("_") in key!
@@ -118,15 +113,22 @@ loadStorage()
         
       <Image  source={{uri: args.url}}
   style={{width: 40, height: 40}}></Image>
-      <Text>{args.name}</Text>
-      <Text>{args.symbol}</Text>
-      <Text>{args.price}</Text>
+      <Text>{args.name} - {args.symbol}</Text>
+      <Text>( {args.price} $ )</Text>
 
-      <Text onPress={openLink}>URL: </Text>
+      <Button onPress={openLink}>Open image</Button>
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between'}}>
+      <Text>Slug: </Text>
       <Text>{args.slug}</Text>
-      <Text>Rank: {args.rank}</Text>
+      </View>
+
+      <View style={{flexDirection: 'row', justifyContent: 'space-between'}}>
+      <Text>Rank: </Text>
+      <Text>{args.rank}</Text>
+      </View>
+     
       <Button onPress={()=> favorite(args)}>Add Favorite</Button>
-      <Button onPress={()=> clear()}>Clear</Button>
+      <Button onPress={()=> clear()}>Clear all favorites</Button>
   
              </View>
     );

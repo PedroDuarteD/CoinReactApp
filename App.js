@@ -5,12 +5,13 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { NavigationContainer } from '@react-navigation/native';
 import AppDetails from './src/details';
 import HomePage from './src/homepage';
+import CustomNavBar from './src/CustomNavBar';
 
 
 
 
 const Stack = createNativeStackNavigator();
-
+// screenOptions={{header: (props)=> <CustomNavBar {...props}/>   }}
 export default function App() {
   return (
     <NavigationContainer>

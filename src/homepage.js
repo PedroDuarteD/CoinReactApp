@@ -16,10 +16,13 @@ export default function HomePage(){
 
     const [favorite, setFavorite] = useState([]);
 
+    var mobile = true
 
     const navigation = useNavigation();
   useEffect(()=>{
-    fetch("https://cryptocoinback.pedroduarte.online/api/data",{
+    fetch(
+      mobile? "https://pro-api.coinmarketcap.com/v1/cryptocurrency/listings/latest?start=1&limit=5&convert=USD&CMC_PRO_API_KEY=abd21725-e7b1-4b5a-a84c-4c4067692ebb":
+      "https://cryptocoinback.pedroduarte.online/api/data",{
     })
     .then((res)=>{
         if(!res.ok){
@@ -28,8 +31,8 @@ export default function HomePage(){
         return res.json()
       
      }).then(async (convert)=>{
-      console.log("consola ",convert)
-
+     
+   //clearCoins()
 
            //load all coin
         var convert_coins = []
@@ -58,7 +61,7 @@ const cr =convert.data.map((item)=>{
       id: item.id,
       name: item.name,
       symbol: item.symbol,
-      price: item.quote.USD.price.toString().substring(0,3),
+      price: item.quote.USD.price.toString().substring(0,5),
       slug: item.slug,
       rank: item.cmc_rank,
       url: "",
@@ -81,7 +84,7 @@ const cr =convert.data.map((item)=>{
 
 
         }catch(erro){
-             clearCoins()
+          
 
           console.log("erro no catch ",erro.message)
           console.log("erro no catch ",convert)
@@ -95,7 +98,7 @@ const cr =convert.data.map((item)=>{
          id: item.id,
          name: item.name,
          symbol: item.symbol,
-         price: item.quote.USD.price.toString().substring(0,3),
+         price: item.quote.USD.price.toString().substring(0,5),
          slug: item.slug,
          rank: item.cmc_rank,
          visible: true,
@@ -228,13 +231,13 @@ const loadCoins = async (allCoins) =>{
           console.log("entrou "+cry.symbol+" __ "+older.symbol)
             final.push( {  id: cry.id,
         name: cry.name,
-        price: cry.quote.USD.price.toString().substring(0,3), 
+        price: cry.quote.USD.price.toString().substring(0,5), 
         symbol: cry.symbol, 
       visible: true,
       url: url,
         slug: cry.slug,
       rank: cry.cmc_rank,
-        other: older.price.toString().substring(0,3)})
+        other: older.price.toString().substring(0,5)})
         }
 
    
@@ -351,7 +354,7 @@ const loadStorage = (allCrypt) =>{
 
             if(cry.id==item){
               const url =   await loadLogo(cry.id, cry.slug)
-             list.push({id: cry.id, name: cry.name,url: url, symbol: cry.symbol, price: cry.quote.USD.price })
+             list.push({id: cry.id, name: cry.name,url: url, symbol: cry.symbol, price: cry.quote.USD.price.toString().substring(0,5), slug: cry.slug, rank: cry.cmc_rank })
          
                }
           }
@@ -369,7 +372,8 @@ for(var index=0; index <allCrypt.length; index++){
 var item = allCrypt[index]
 if(item.id==ret.id){
   const logo  = await loadLogo(item.id, item.slug)
-  setFavorite([ {id: ret.id, name: item.name,url: logo, symbol: item.symbol, price: item.quote.USD.price }])
+  console.log("data pe: ",item)
+  setFavorite([ {id: ret.id, name: item.name,url: logo, symbol: item.symbol, price: item.quote.USD.price.toString().substring(0,5), slug: item.slug, rank: item.cmc_rank }])
 
   }
 }
@@ -426,13 +430,13 @@ if(item.visible){
       
 <View  style={styles.row}>
       {favorite.map((fav)=> {
-        return  <Card  key={fav.id} style={{flex: 1, flexDirection: 'row', paddingLeft: 10}}> 
+        return  <Card  key={fav.id} onPress={()=>onPress(fav)} style={{flex: 1, flexDirection: 'row', paddingLeft: 10}}> 
         
         <Image style={{paddingTop: 10,width: 30, height: 30}}  source={{uri: fav.url}}></Image>  
         
         <Text style={{fontSize: 10}}> {fav.name} {fav.symbol}</Text>
 
-<Text style={{fontSize: 8}}> {fav.price.toString().substring(0,3)} </Text>
+<Text style={{fontSize: 8}}> {fav.price.toString().substring(0,5)} </Text>
 </Card>
       })}
       </View>
