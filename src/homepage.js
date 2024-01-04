@@ -19,7 +19,8 @@ export default function HomePage(){
 
     const navigation = useNavigation();
   useEffect(()=>{
-    fetch("https://pro-api.coinmarketcap.com/v1/cryptocurrency/listings/latest?start=1&limit=5&convert=USD&CMC_PRO_API_KEY=abd21725-e7b1-4b5a-a84c-4c4067692ebb")
+    fetch("https://cryptocoinback.pedroduarte.online/api/data",{
+    })
     .then((res)=>{
         if(!res.ok){
           throw Error("could not fetch data !")
@@ -28,7 +29,6 @@ export default function HomePage(){
       
      }).then(async (convert)=>{
       console.log("consola ",convert)
-           //  clearCoins()
 
 
            //load all coin
@@ -40,7 +40,8 @@ export default function HomePage(){
           console.log("load coins 1")
 
             let value = await AsyncStorage.getItem('coins');
-            if (value != null){
+            if (value!=null){
+              console.log("um dois")
               loadCoins(convert.data)
             }
             else {
@@ -49,8 +50,10 @@ export default function HomePage(){
          convert_coins.push({value: item.quote.USD.price, name: item.name})
         })
           saveCoins(convert_coins)
-  setCrypt(
-convert.data.map((item)=>{
+
+
+const cr =convert.data.map((item)=>{
+
   return {
       id: item.id,
       name: item.name,
@@ -58,16 +61,29 @@ convert.data.map((item)=>{
       price: item.quote.USD.price.toString().substring(0,3),
       slug: item.slug,
       rank: item.cmc_rank,
+      url: "",
       visible: true,
       other: ""
     } 
 }
-  ))
+  )
+
+  for(var index=0; index< cr.length; index++){
+    var c =  cr[index]
+   const url = await loadLogo(c.id, c.slug)
+   c.url = url;
+  }
+
+  setCrypt(
+    cr
+)
            }
 
 
         }catch(erro){
-          console.log("erro no catch ",convert)
+             clearCoins()
+
+          console.log("erro no catch ",erro.message)
           console.log("erro no catch ",convert)
           convert.data.map((item)=>{
             convert_coins.push({value: item.quote.USD.price, name: item.name})
@@ -89,7 +105,6 @@ convert.data.map((item)=>{
      ))
        
         }
-        
         setFavorite([])
         loadStorage(convert.data)
       navigation.addListener("focus",()=>{
@@ -118,7 +133,7 @@ convert.data.map((item)=>{
 
 
   const onPress = (item) =>{
-  navigation.navigate('Details', {id: item.id, name: item.name, price: item.price, symbol: item.symbol, slug: item.slug, rank: item.rank})
+  navigation.navigate('Details', {id: item.id, name: item.name, price: item.price, symbol: item.symbol, slug: item.slug, rank: item.rank, url: item.url})
 }
 
 
@@ -168,7 +183,7 @@ const loadCoins = async (allCoins) =>{
       someFlag: true
     }
   })
-  .then(ret => {
+  .then(async ret => {
   
 
     var data = [
@@ -209,12 +224,14 @@ const loadCoins = async (allCoins) =>{
         var older = data[old]
 
         if(cry.symbol == older.symbol){   
+          const url = await loadLogo(cry.id,cry.slug)
           console.log("entrou "+cry.symbol+" __ "+older.symbol)
             final.push( {  id: cry.id,
         name: cry.name,
         price: cry.quote.USD.price.toString().substring(0,3), 
         symbol: cry.symbol, 
       visible: true,
+      url: url,
         slug: cry.slug,
       rank: cry.cmc_rank,
         other: older.price.toString().substring(0,3)})
@@ -227,13 +244,26 @@ const loadCoins = async (allCoins) =>{
     setCrypt(final)
      
   }).catch(erro=>{
-    console.log("error")
+    console.log("error pe ",erro.message)
     erro = true
   })
 
   return erro
 }
 
+async function loadLogo  (id,slug) {
+  var url = "";
+     await fetch("https://cryptocoinback.pedroduarte.online/api/logo?slug="+slug,{
+      })
+      .then((res)=>{
+          return res.json()
+       })
+       .then(item=>{
+        url=item.data[id].logo
+       })
+
+       return url
+}
 
 const ChangeText = (e)=>{
   setSearch(e)
@@ -249,6 +279,7 @@ const ChangeText = (e)=>{
       price: item.price,
       slug: item.slug,
       rank: item.rank,
+      url: item.url,
       visible: true,
       other: item.other}
 }))
@@ -265,6 +296,7 @@ var no = false
             symbol: item.symbol,
             price: item.price,
             slug: item.slug,
+      url: item.url,
             rank: item.rank,
             visible: true,
             other: item.other}
@@ -277,6 +309,7 @@ var no = false
             slug: item.slug,
             rank: item.rank,
             visible: false,
+      url: item.url,
             other: item.other}
     }
   }))
@@ -300,35 +333,48 @@ const loadStorage = (allCrypt) =>{
       someFlag: true
     }
   })
-  .then(ret => {
+  .then(async ret => {
     if(
       ret.id.includes(",") ){
 
         const ids = ret.id.toString().split(", ")
         console.log("render 1")
          var list = [] 
-          ids.map((item)=>{
-        
-            allCrypt.map((cry)=>{
-              if(cry.id==item){
 
-            list.push({id: cry.id, name: cry.name, symbol: cry.symbol, price: cry.quote.USD.price })
-               
-              }
-            })
+
+         for(var index_ids=0; index_ids <ids.length; index_ids++){
+          for(var index_crypt=0; index_crypt <allCrypt.length; index_crypt++){
+
+            var cry = allCrypt[index_crypt]
+
+            var item = ids[index_ids]
+
+            if(cry.id==item){
+              const url =   await loadLogo(cry.id, cry.slug)
+             list.push({id: cry.id, name: cry.name,url: url, symbol: cry.symbol, price: cry.quote.USD.price })
          
-           
+               }
+          }
+         }
 
+         setFavorite(list)
 
-          })
-               setFavorite(list)
+       
+        
+       
     }else{
-      allCrypt.map((cry)=>{
-        if(cry.id==ret.id){
+  
 
-   setFavorite([ {id: ret.id, name: cry.name, symbol: cry.symbol, price: cry.quote.USD.price }])
-        }
-      })
+for(var index=0; index <allCrypt.length; index++){
+var item = allCrypt[index]
+if(item.id==ret.id){
+  const logo  = await loadLogo(item.id, item.slug)
+  setFavorite([ {id: ret.id, name: item.name,url: logo, symbol: item.symbol, price: item.quote.USD.price }])
+
+  }
+}
+
+
     }
   
   })
@@ -354,7 +400,7 @@ if(item.visible){
         return <Card key={item.id} style={styles.row_card}   onPress={()=>onPress(item)} >
 
 
-  <Image  source={{uri: 'https://www.criptofacil.com/wp-content/uploads/2023/11/pouco-bitcoin-nas-exchanges-1536x806.jpg.webp'}}
+  <Image  source={{uri: item.url}}
   style={{width: 40, height: 40}}></Image>
 
 <View style={{flex: 1, flexDirection: 'column'}}>
@@ -382,7 +428,7 @@ if(item.visible){
       {favorite.map((fav)=> {
         return  <Card  key={fav.id} style={{flex: 1, flexDirection: 'row', paddingLeft: 10}}> 
         
-        <Image style={{paddingTop: 10,width: 15, height: 15}}  source={{uri: 'https://www.criptofacil.com/wp-content/uploads/2023/11/pouco-bitcoin-nas-exchanges-1536x806.jpg.webp'}}></Image>  
+        <Image style={{paddingTop: 10,width: 30, height: 30}}  source={{uri: fav.url}}></Image>  
         
         <Text style={{fontSize: 10}}> {fav.name} {fav.symbol}</Text>
 

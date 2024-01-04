@@ -9,15 +9,17 @@ import storage from './storage';
 function AppDetails (){
 const [allFavorite ,setAllFavorite] = React.useState("");
 
+const route = useRoute()
 
+  const args = route.params
 React.useEffect(()=>{
 loadStorage()
 },[])
 
   const openLink = () => {
-    Linking.canOpenURL("https://www.criptofacil.com/wp-content/uploads/2023/11/pouco-bitcoin-nas-exchanges-1536x806.jpg.webp").then(supported => {
+    Linking.canOpenURL(args.url).then(supported => {
       if (supported) {
-        Linking.openURL("https://www.criptofacil.com/wp-content/uploads/2023/11/pouco-bitcoin-nas-exchanges-1536x806.jpg.webp");
+        Linking.openURL(args.url);
       } else {
         console.log("Don't know how to open URI: " + this.props.url);
       }
@@ -49,23 +51,9 @@ loadStorage()
       }
     })
     .then(ret => {
-      // found data go to then()
-      console.log("details: storage: "+ret.id)
       setAllFavorite( ret.id) 
     })
-    .catch(err => {
-      // any exception including data not found
-      // goes to catch()
-      console.warn(err.message);
-      switch (err.name) {
-        case 'NotFoundError':
-          // TODO;
-          break;
-        case 'ExpiredError':
-          // TODO
-          break;
-      }
-    });
+  
   }
 
   const clear = (item) =>{
@@ -122,15 +110,13 @@ loadStorage()
     }
    
   }
-  const route = useRoute()
-
-  const args = route.params
+  
 
 
     return (
         <View style={styles.container}>
         
-      <Image  source={{uri: 'https://www.criptofacil.com/wp-content/uploads/2023/11/pouco-bitcoin-nas-exchanges-1536x806.jpg.webp'}}
+      <Image  source={{uri: args.url}}
   style={{width: 40, height: 40}}></Image>
       <Text>{args.name}</Text>
       <Text>{args.symbol}</Text>
