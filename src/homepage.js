@@ -15,7 +15,7 @@ export default function HomePage(){
 
     const [favorite, setFavorite] = useState([]);
 
-    var mobile = true
+    var mobile = false
 
     const navigation = useNavigation();
 
@@ -208,6 +208,14 @@ const ChangeText = (e)=>{
   setSearch(e)
   console.log("tex: "+e)
 
+  
+
+ 
+
+}
+
+const searchFunction = ()=> {
+ var e = search
   if(e==""){
 
 
@@ -317,9 +325,6 @@ setPending(false)
 
 
   }
-
- 
-
 }
 
 const loadStorage = (allCrypt) =>{
@@ -391,7 +396,11 @@ if(pending ){
   return (
     
      <View style={styles.container}>
-      <TextInput style={styles.input} placeholder='Coin' onChangeText={(e)=>ChangeText(e)} value={search}/>
+       <View style={{flexDirection: 'row', alignItems: 'center', justifyContent: 'center'}}>
+ <TextInput style={styles.input} placeholder='Coin' onChangeText={(e)=>ChangeText(e)} value={search}/>
+ <Button onPress={()=> searchFunction()}>Procurar</Button>
+       </View>
+     
     {crypt.length==0? <Text  > Sem Coins </Text>:<FlatList style={{height: 300, marginBottom: 10, marginTop: 10}} data={crypt} renderItem={({item}) =>{
 
 
